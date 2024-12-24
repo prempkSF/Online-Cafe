@@ -7,7 +7,7 @@ namespace OnlineCafe
 
     public static class ReadWriteFS<DataType>
     {
-        public static void ReadFiles(string fileName, out CustomList<DataType> values, List<Enum> enumTypes)
+        public static void ReadFiles(string fileName, out CustomList<DataType> values, object enumTypes=null)
         {
             values = [];
             string[] csvRead = File.ReadAllLines($"OnlineCafe/{fileName}");
@@ -38,14 +38,10 @@ namespace OnlineCafe
                     }
                     else
                     {
-                        foreach (var enumType in enumTypes)
+                        if(infoArray[j].PropertyType.IsEnum)
                         {
-                            // Ensure the property type matches the enum type
-                            if (infoArray[j].GetType().Equals(enumType))
-                            {
-                                infoArray[j].SetValue(dataType, Enum.Parse(enumType.GetType(),fieldValues[j], true));
-                                break; // Once found, stop searching
-                            }
+                            Enum.TryParse(infoArray[j].PropertyType,fieldValues[j],true,out enumTypes);
+                            infoArray[j].SetValue(dataType,enumTypes);
                         }
 
                         // infoArray[j].SetValue(dataType, Enum.Parse<OrderStatus>(fieldValues[j], true));

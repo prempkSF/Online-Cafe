@@ -17,16 +17,21 @@ namespace OnlineCafe
         public static void LoadFiles()
         {
             //Read Food Details
-            ReadWriteFS<FoodDetails>.ReadFiles(fileName: "FoodDetails.csv", values: out foods,[]);
+            ReadWriteFS<FoodDetails>.ReadFiles(fileName: "FoodDetails.csv", values: out foods);
 
             //Read User Details
-            ReadWriteFS<UserDetails>.ReadFiles(fileName: "UserDetails.csv", values: out users,[GenderDetails.Select]);
+            ReadWriteFS<UserDetails>.ReadFiles(fileName: "UserDetails.csv", values: out users,typeof(GenderDetails));
 
             //Read Cart Items
-            ReadWriteFS<CartItem>.ReadFiles(fileName: "CartItems.csv", values: out cartItems,[]);
+            ReadWriteFS<CartItem>.ReadFiles(fileName: "CartItems.csv", values: out cartItems);
 
             //Read Orders
-            ReadWriteFS<OrderDetails>.ReadFiles(fileName: "Orders.csv", values: out orders,[OrderStatus.Default]);
+            ReadWriteFS<OrderDetails>.ReadFiles(fileName: "Orders.csv", values: out orders,typeof(OrderStatus));
+
+            foreach(OrderDetails orderDetails in orders)
+            {
+                System.Console.WriteLine(orderDetails.UserID);
+            }
         }
 
         public static void WriteFiles()
@@ -370,7 +375,8 @@ namespace OnlineCafe
                 bool isOrder = false;
                 CustomList<OrderDetails> orderedOrder = [];
                 foreach (OrderDetails orderDetails in orders)
-                {
+                {   
+                    System.Console.WriteLine(orderDetails.OrderStatus);
                     if (currentLoggedCustomer.UserID.Equals(orderDetails.UserID) && orderDetails.OrderStatus.Equals(OrderStatus.Ordered))
                     {
                         isOrder = true;
@@ -381,7 +387,7 @@ namespace OnlineCafe
                 {
                     Grid<OrderDetails>.ShowTable(orderedOrder);
                     System.Console.WriteLine("Enter Order Id to Cancel : ");
-                    string orderID = Console.ReadLine();
+                    string orderID = Console.ReadLine().ToUpper();
                     //Binary Search to find the Login User
                     bool flag = true;
                     OrderDetails order = Search<OrderDetails>.BinarySearch(searchElement: orderID, values: orders, prop: "OrderID", flag: out flag);
