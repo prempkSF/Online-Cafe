@@ -31,5 +31,10 @@ namespace OnlineCafe
         /// <see cref="OrderDetails"/> Order Status ENUM
         /// </summary>
         public OrderStatus OrderStatus { get; set; }
+
+        public OrderDetails()
+        {
+            
+        }
     }
 }

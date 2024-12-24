@@ -25,5 +25,17 @@ namespace OnlineCafe
         /// <see cref="FoodDetails"> Found Available Count
         /// </summary>
         public int AvailableQuantity { get; set; }
+
+        public FoodDetails()
+        {
+            
+        }
+        public FoodDetails(string foodName,double foodPrice,int availableQuantity)
+        {
+            FoodID=$"FID{++s_foodID}";
+            FoodName=foodName;
+            FoodPrice=foodPrice;
+            AvailableQuantity=availableQuantity;
+        }
     }
 }

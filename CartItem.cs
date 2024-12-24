@@ -30,5 +30,10 @@ namespace OnlineCafe
         /// <see cref="CartItem"> Total Order Quantity
         /// </summary>
         public int OrderQuantity { get; set; }
+
+        public CartItem()
+        {
+            
+        }
     }
 }

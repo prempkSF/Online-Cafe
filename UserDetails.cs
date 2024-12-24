@@ -30,8 +30,20 @@ namespace OnlineCafe
         /// <see cref="UserDetails"/> Public Wallet Balance
         /// </summary>
         /// <value></value>
-        public double WalletBalance { get { return _walletBalance; } }
+        public double WalletBalance { get { return _walletBalance; } set{ _walletBalance=value;}}
 
+        public UserDetails(string name,string fatherName,GenderDetails gender,string mobileNumber,string mailID,string workStation,double walletBalance):base(name,fatherName,gender,mobileNumber,mailID)
+        {
+            UserID=$"SF{++s_userID}";
+            WorkStationNumber=workStation;
+            _walletBalance=WalletBalance;
+        }
+        
+        
+        
+        
+    
+        
         /// <summary>
         /// To Recharge User Wallet
         /// </summary>
