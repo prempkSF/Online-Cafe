@@ -1,7 +1,10 @@
 namespace OnlineCafe
 {
+    /// <summary>
+    /// <see cref="GenderDetails"> User Gender ENUM
+    /// </summary>
     public enum GenderDetails
     {
-        Unknown,Male,Female,Transgender
+        Select,Male,Female,Transgender
     }
 }
