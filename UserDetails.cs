@@ -32,6 +32,10 @@ namespace OnlineCafe
         /// <value></value>
         public double WalletBalance { get { return _walletBalance; } set{ _walletBalance=value;}}
 
+        public UserDetails()
+        {
+
+        }
         public UserDetails(string name,string fatherName,GenderDetails gender,string mobileNumber,string mailID,string workStation,double walletBalance):base(name,fatherName,gender,mobileNumber,mailID)
         {
             UserID=$"SF{++s_userID}";
@@ -39,9 +43,8 @@ namespace OnlineCafe
             _walletBalance=WalletBalance;
         }
         
-        
-        
-        
+
+   
     
         
         /// <summary>

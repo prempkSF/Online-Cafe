@@ -4,7 +4,7 @@ using System.Runtime.Intrinsics.Arm;
 
 namespace OnlineCafe
 {
-    
+
     public static class Operation
     {
         static CustomList<UserDetails> users = new CustomList<UserDetails>();
@@ -17,20 +17,31 @@ namespace OnlineCafe
         public static void LoadFiles()
         {
             //Read Food Details
-            ReadWriteFS<FoodDetails>readWriteFSFood=new ReadWriteFS<FoodDetails>();
-            readWriteFSFood.ReadFiles(fileName:"FoodDetails.csv",values:out foods);
+            ReadWriteFS<FoodDetails>.ReadFiles(fileName: "FoodDetails.csv", values: out foods,[]);
 
             //Read User Details
-            ReadWriteFS<UserDetails>readWriteFSUser=new ReadWriteFS<UserDetails>();
-            readWriteFSUser.ReadFiles(fileName:"UserDetails.csv",values:out users);
+            ReadWriteFS<UserDetails>.ReadFiles(fileName: "UserDetails.csv", values: out users,[GenderDetails.Select]);
 
             //Read Cart Items
-            ReadWriteFS<CartItem>readWriteFSCart=new ReadWriteFS<CartItem>();
-            readWriteFSCart.ReadFiles(fileName:"CartItems.csv",values:out cartItems);
+            ReadWriteFS<CartItem>.ReadFiles(fileName: "CartItems.csv", values: out cartItems,[]);
 
             //Read Orders
-            ReadWriteFS<OrderDetails>readWriteFSOrder=new ReadWriteFS<OrderDetails>();
-            readWriteFSOrder.ReadFiles(fileName:"Orders.csv",values:out orders);
+            ReadWriteFS<OrderDetails>.ReadFiles(fileName: "Orders.csv", values: out orders,[OrderStatus.Default]);
+        }
+
+        public static void WriteFiles()
+        {
+            //Read Food Details
+            ReadWriteFS<FoodDetails>.WriteFiles(fileName: "FoodDetails.csv", values: foods);
+
+            //Read User Details
+            ReadWriteFS<UserDetails>.WriteFiles(fileName: "UserDetails.csv", values: users);
+
+            //Read Cart Items
+            ReadWriteFS<CartItem>.WriteFiles(fileName: "CartItems.csv", values: cartItems);
+
+            //Read Orders
+            ReadWriteFS<OrderDetails>.WriteFiles(fileName: "Orders.csv", values: orders);
         }
         public static void MainMenu()
         {
@@ -122,10 +133,8 @@ namespace OnlineCafe
                 System.Console.WriteLine("Enter User ID : ");
                 string userID = Console.ReadLine().ToUpper();
                 //Binary Search to find the Login User
-                Search<UserDetails> search = new Search<UserDetails>();
                 bool flag = true;
-                currentLoggedCustomer = search.BinarySearch(searchElement: userID, values: users, prop: "UserID", flag: out flag);
-
+                currentLoggedCustomer = Search<UserDetails>.BinarySearch(searchElement: userID, values: users, prop: "UserID", flag: out flag);
                 if (flag)
                 {
                     //If user not found
@@ -191,6 +200,7 @@ namespace OnlineCafe
                             }
                         case 7:
                             {
+
                                 System.Console.WriteLine("*************** Exit ****************");
                                 subMenuFlag = false;
                                 break;
@@ -223,7 +233,116 @@ namespace OnlineCafe
         {
             try
             {
-                
+                //Show all Food items
+                Grid<FoodDetails>.ShowTable(foods);
+                //Create a Order with Status Intiated
+                OrderDetails orderDetails = new OrderDetails(orderDate: DateTime.Now, userID: currentLoggedCustomer.UserID, orderStatus: OrderStatus.Initiated, totalPrice: 0);
+                //Local Cart Item
+                CustomList<CartItem> localCartItem = new CustomList<CartItem>();
+                double totalPrice = 0;
+                string option = "yes";
+                do
+                {
+                    //Get Food ID
+                    System.Console.WriteLine("Enter Food ID : ");
+                    string foodID = Console.ReadLine().ToUpper();
+                    System.Console.WriteLine("Enter Quantity Required : ");
+                    int quantity = int.Parse(Console.ReadLine());
+                    bool flag = true;
+                    //Food Object with Food ID
+                    //Binary Search
+                    FoodDetails food = Search<FoodDetails>.BinarySearch(searchElement: foodID, values: foods, prop: "FoodID", flag: out flag);
+                    if (flag)
+                    {
+                        //If Food ID not Found
+                        System.Console.WriteLine("Invalid Food ID ...");
+                    }
+                    else
+                    {
+                        //Food ID Valid
+                        //Check Required Quantity with Available Quantity
+                        if (quantity <= food.AvailableQuantity)
+                        {
+                            //Create a Cart Item
+                            CartItem cartItem = new CartItem(orderQuantity: quantity, orderPrice: food.FoodPrice * quantity, foodID: food.FoodID, ordeID: orderDetails.OrderID);
+                            //Decrement Food Available Quantity
+                            food.AvailableQuantity -= quantity;
+                            //Adding Total Price of all Cart Items
+                            totalPrice = totalPrice + food.FoodPrice * quantity;
+                            //Add to Local Cart Item
+                            localCartItem.Add(cartItem);
+                        }
+                        else
+                        {
+                            //If quantity not available
+                            System.Console.WriteLine("Required Quantity Not Available...");
+                        }
+                        //Ask if User wants to choose another product
+                        System.Console.WriteLine("Do you want to pick another product (yes/no): ");
+                        option = Console.ReadLine().ToLower();
+                    }
+                } while (option == "yes");
+                //Confirm user wants to purchase
+                System.Console.WriteLine("Do you wish to Confirm the Purchase (yes/no): ");
+                string confirm = Console.ReadLine().ToLower();
+                if (confirm == "yes")
+                {
+                    //Continue to Order Check Total Price with Wallet
+                    if (totalPrice <= currentLoggedCustomer.WalletBalance)
+                    {
+                        //Place Order
+                        PlaceOrder(totalPrice: totalPrice, orderDetails: orderDetails, localCartItem: localCartItem);
+
+                    }
+                    else
+                    {
+                        // bool balance=false;
+                        System.Console.WriteLine("Insufficient Balance");
+                        System.Console.WriteLine("Are you willing to recharge (yes/no): ");
+                        string recharge = Console.ReadLine().ToLower();
+                        if (recharge == "yes")
+                        {
+                            System.Console.WriteLine($"Total Order Amount : {totalPrice}\nMinimum Recharge Amount : {totalPrice - currentLoggedCustomer.WalletBalance}");
+                            System.Console.WriteLine("Enter Recharge Amount : ");
+                            currentLoggedCustomer.WalletRecharge(double.Parse(Console.ReadLine()));
+                            bool balance = totalPrice <= currentLoggedCustomer.WalletBalance ? true : false;
+                            if (balance)
+                            {
+                                //Place Order
+                                PlaceOrder(totalPrice: totalPrice, orderDetails: orderDetails, localCartItem: localCartItem);
+
+                            }
+                            else
+                            {
+                                //Increment Food Quantity
+                                TraverseCartItems(localCartItem:localCartItem);
+                            }
+                        }
+                        //User doesn't Wish to Recharge
+                        else
+                        {
+                            TraverseCartItems(localCartItem:localCartItem);
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    //If not confirmed
+                    foreach (CartItem item in localCartItem)
+                    {
+                        //Traverse Cart Item and Increment Food Available Quantity
+                        foreach (FoodDetails food in foods)
+                        {
+                            if (item.FoodID.Equals(food.FoodID))
+                            {
+                                food.AvailableQuantity += item.OrderQuantity;
+                            }
+                        }
+                    }
+                    System.Console.WriteLine("Exiting Order....");
+                }
             }
             catch (Exception e)
             {
@@ -264,9 +383,8 @@ namespace OnlineCafe
                     System.Console.WriteLine("Enter Order Id to Cancel : ");
                     string orderID = Console.ReadLine();
                     //Binary Search to find the Login User
-                    Search<OrderDetails> search = new Search<OrderDetails>();
                     bool flag = true;
-                    OrderDetails order = search.BinarySearch(searchElement: orderID, values: orders, prop: "OrderID", flag: out flag);
+                    OrderDetails order = Search<OrderDetails>.BinarySearch(searchElement: orderID, values: orders, prop: "OrderID", flag: out flag);
 
                     if (flag)
                     {
@@ -277,25 +395,25 @@ namespace OnlineCafe
                     {
                         //If order Found
                         //Add Food Item Quantity
-                        foreach(CartItem cartItem in cartItems)
+                        foreach (CartItem cartItem in cartItems)
                         {
-                            if(order.OrderID.Equals(cartItem.OrderID))
+                            if (order.OrderID.Equals(cartItem.OrderID))
                             {
-                                foreach(FoodDetails foodDetails in foods)
+                                foreach (FoodDetails foodDetails in foods)
                                 {
-                                    if(foodDetails.FoodID.Equals(cartItem.FoodID))
+                                    if (foodDetails.FoodID.Equals(cartItem.FoodID))
                                     {
-                                        foodDetails.AvailableQuantity+=cartItem.OrderQuantity;
+                                        foodDetails.AvailableQuantity += cartItem.OrderQuantity;
                                     }
                                 }
                             }
                         }
                         //Order Status
-                        order.OrderStatus=OrderStatus.Cancelled;
+                        order.OrderStatus = OrderStatus.Cancelled;
                         //User Wallet Refund
                         currentLoggedCustomer.WalletRecharge(order.TotalPrice);
                         System.Console.WriteLine("Order Cancelled Successfully");
-                        
+
                     }
                 }
                 else
@@ -336,6 +454,33 @@ namespace OnlineCafe
                 System.Console.WriteLine(e.Message);
                 System.Console.WriteLine("Try Again");
             }
+        }
+
+        public static void PlaceOrder(double totalPrice, CustomList<CartItem> localCartItem, OrderDetails orderDetails)
+        {
+            //Deduct Wallet Amount
+            currentLoggedCustomer.DeductAmount(totalPrice);
+            //Global CartItem
+            cartItems.AddRange(localCartItem);
+            orderDetails.OrderStatus = OrderStatus.Ordered;
+            orderDetails.TotalPrice = totalPrice;
+            orders.Add(orderDetails);
+            System.Console.WriteLine($"Order Placed Successfully {orderDetails.OrderID}");
+        }
+        public static void TraverseCartItems(CustomList<CartItem> localCartItem)
+        {
+            foreach (CartItem item in localCartItem)
+            {
+                //Traverse Cart Item and Increment Food Available Quantity
+                foreach (FoodDetails food in foods)
+                {
+                    if (item.FoodID.Equals(food.FoodID))
+                    {
+                        food.AvailableQuantity += item.OrderQuantity;
+                    }
+                }
+            }
+            System.Console.WriteLine("Exiting without Order due to Insufficient Balance");
         }
     }
 }

@@ -15,7 +15,12 @@ namespace OnlineCafe
         /// </summary>
         private static int s_itemID=100;
         /// <summary>
-        /// <see cref="CartItem"> Order ID Auto Generated
+        /// <see cref="CartItem"/> Cart ID Auto Generated
+        /// </summary>
+        /// <value></value>
+        public string ItemID { get; set; }
+        /// <summary>
+        /// <see cref="CartItem"> Order ID
         /// </summary>
         public string OrderID { get; set; }
         /// <summary>
@@ -30,10 +35,21 @@ namespace OnlineCafe
         /// <see cref="CartItem"> Total Order Quantity
         /// </summary>
         public int OrderQuantity { get; set; }
-
         public CartItem()
         {
+
+        }
+        // public CartItem()
+        // {
+        //     ItemID=$"ITID{++s_itemID}";
+        // }
+        public CartItem(string ordeID,string foodID,double orderPrice,int orderQuantity)
+        {
             
+            OrderID=ordeID;
+            FoodID=foodID;
+            OrderPrice=orderPrice;
+            OrderQuantity=orderQuantity;
         }
     }
 }

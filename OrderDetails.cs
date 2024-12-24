@@ -36,5 +36,14 @@ namespace OnlineCafe
         {
             
         }
+
+        public OrderDetails(string userID,DateTime orderDate,double totalPrice,OrderStatus orderStatus)
+        {
+            OrderID=$"OID{++s_orderID}";
+            UserID=userID;
+            OrderDate=orderDate;
+            TotalPrice=totalPrice;
+            OrderStatus=orderStatus;
+        }
     }
 }

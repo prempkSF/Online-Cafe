@@ -36,7 +36,8 @@ namespace OnlineCafe
         /// <value></value>
         public string MailID { get; set; }
 
-
+        public PersonalDetails()
+        {}
         public PersonalDetails(string name,string fatherName,GenderDetails gender,string mobileNumber,string mailID)
         {
             Name=name;

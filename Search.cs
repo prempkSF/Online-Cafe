@@ -4,13 +4,13 @@ using System.Reflection;
 namespace OnlineCafe
 {
     //Search Class
-    public class Search<DataType>
+    public static class Search<DataType>
     {
         //Binary Search
         //With CustomList
         //Common Method for all Custom List Class
         //Returns the Object Class
-        public DataType BinarySearch(CustomList<DataType> values, string prop,string searchElement,out bool flag)
+        public static DataType BinarySearch(CustomList<DataType> values, string prop,string searchElement,out bool flag)
         {
             //Binary Serch
             PropertyInfo property =typeof(DataType).GetProperty(prop);

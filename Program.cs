@@ -11,5 +11,6 @@ class Program
         FileHandling.CreateFS();
         Operation.LoadFiles();
         Operation.MainMenu();
+        Operation.WriteFiles();
     }
 }
