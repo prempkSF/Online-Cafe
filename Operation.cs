@@ -264,7 +264,7 @@ namespace OnlineCafe
                         if (quantity <= food.AvailableQuantity)
                         {
                             //Create a Cart Item
-                            CartItem cartItem = new CartItem(orderQuantity: quantity, orderPrice: food.FoodPrice * quantity, foodID: food.FoodID, ordeID: orderDetails.OrderID);
+                            CartItem cartItem = new CartItem(orderQuantity: quantity, orderPrice: food.FoodPrice * quantity, foodID: food.FoodID, orderID: orderDetails.OrderID);
                             //Decrement Food Available Quantity
                             food.AvailableQuantity -= quantity;
                             //Adding Total Price of all Cart Items

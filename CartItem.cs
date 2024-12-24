@@ -39,14 +39,10 @@ namespace OnlineCafe
         {
 
         }
-        // public CartItem()
-        // {
-        //     ItemID=$"ITID{++s_itemID}";
-        // }
-        public CartItem(string ordeID,string foodID,double orderPrice,int orderQuantity)
+        public CartItem(string orderID,string foodID,double orderPrice,int orderQuantity)
         {
-            
-            OrderID=ordeID;
+            ItemID=$"ITID{++s_itemID}";
+            OrderID=orderID;
             FoodID=foodID;
             OrderPrice=orderPrice;
             OrderQuantity=orderQuantity;
