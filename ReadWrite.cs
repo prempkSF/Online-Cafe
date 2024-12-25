@@ -34,7 +34,7 @@ namespace OnlineCafe
                     }
                     else if (infoArray[j].PropertyType == typeof(DateTime))
                     {
-                        infoArray[j].SetValue(dataType, DateTime.ParseExact(fieldValues[j], "MM/dd/yyyy hh:mm:ss tt", null));
+                        infoArray[j].SetValue(dataType, DateTime.ParseExact(fieldValues[j], "MM/dd/yyyy h:mm:ss tt", null));
                     }
                     else
                     {

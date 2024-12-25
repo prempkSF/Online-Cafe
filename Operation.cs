@@ -20,18 +20,13 @@ namespace OnlineCafe
             ReadWriteFS<FoodDetails>.ReadFiles(fileName: "FoodDetails.csv", values: out foods);
 
             //Read User Details
-            ReadWriteFS<UserDetails>.ReadFiles(fileName: "UserDetails.csv", values: out users,typeof(GenderDetails));
+            ReadWriteFS<UserDetails>.ReadFiles(fileName: "UserDetails.csv", values: out users, typeof(GenderDetails));
 
             //Read Cart Items
             ReadWriteFS<CartItem>.ReadFiles(fileName: "CartItems.csv", values: out cartItems);
 
             //Read Orders
-            ReadWriteFS<OrderDetails>.ReadFiles(fileName: "Orders.csv", values: out orders,typeof(OrderStatus));
-
-            foreach(OrderDetails orderDetails in orders)
-            {
-                System.Console.WriteLine(orderDetails.UserID);
-            }
+            ReadWriteFS<OrderDetails>.ReadFiles(fileName: "Orders.csv", values: out orders, typeof(OrderStatus));
         }
 
         public static void WriteFiles()
@@ -168,7 +163,7 @@ namespace OnlineCafe
                 do
                 {
                     System.Console.WriteLine("1. Show Profile | 2. Food Order      | 3. Modify Order");
-                    System.Console.WriteLine("4. Cancel Order | 5. Wallet Recharge | 6. Show Balance | 7. Exit");
+                    System.Console.WriteLine("4. Cancel Order | 5. Order History   | 6. Wallet Recharge | 7. Show Balance | 8. Exit");
                     int choice = int.Parse(Console.ReadLine());
 
                     switch (choice)
@@ -195,15 +190,20 @@ namespace OnlineCafe
                             }
                         case 5:
                             {
-                                WalletRecharge();
+                                OrderHistory();
                                 break;
                             }
                         case 6:
                             {
-                                ShowBalance();
+                                WalletRecharge();
                                 break;
                             }
                         case 7:
+                            {
+                                ShowBalance();
+                                break;
+                            }
+                        case 8:
                             {
 
                                 System.Console.WriteLine("*************** Exit ****************");
@@ -301,7 +301,6 @@ namespace OnlineCafe
                     }
                     else
                     {
-                        // bool balance=false;
                         System.Console.WriteLine("Insufficient Balance");
                         System.Console.WriteLine("Are you willing to recharge (yes/no): ");
                         string recharge = Console.ReadLine().ToLower();
@@ -320,13 +319,13 @@ namespace OnlineCafe
                             else
                             {
                                 //Increment Food Quantity
-                                TraverseCartItems(localCartItem:localCartItem);
+                                TraverseCartItems(localCartItem: localCartItem);
                             }
                         }
                         //User doesn't Wish to Recharge
                         else
                         {
-                            TraverseCartItems(localCartItem:localCartItem);
+                            TraverseCartItems(localCartItem: localCartItem);
                         }
 
                     }
@@ -359,6 +358,166 @@ namespace OnlineCafe
         {
             try
             {
+                //Check Order ID is valid
+                bool orderedOrder = true;
+                //Current Customer Orders
+                CustomList<OrderDetails> currentCustomerOrders = new CustomList<OrderDetails>();
+                foreach (OrderDetails order in orders)
+                {
+                    if (currentLoggedCustomer.UserID.Equals(order.UserID) && order.OrderStatus.Equals(OrderStatus.Ordered))
+                    {
+                        orderedOrder = false;
+                        currentCustomerOrders.Add(order);
+                    }
+                }
+                //If no Orders
+                if (orderedOrder)
+                {
+                    System.Console.WriteLine("No Order History...");
+                }
+                else
+                {
+                    //Show all Orders
+                    Grid<OrderDetails>.ShowTable(currentCustomerOrders);
+                    //Get Order ID
+                    System.Console.WriteLine("Enter Order ID : ");
+                    string orderID = Console.ReadLine().ToUpper();
+                    //Binary Search
+                    OrderDetails cancelOrder = Search<OrderDetails>.BinarySearch(values: currentCustomerOrders, prop: "OrderID", searchElement: orderID, out orderedOrder);
+                    if (orderedOrder)
+                    {
+                        //If Order ID Incorrect
+                        System.Console.WriteLine("Order ID Invalid...");
+                    }
+                    else
+                    {
+                        //Get Cart Items of the Order
+                        CustomList<CartItem> cancelCart = new CustomList<CartItem>();
+                        double totalPrice = 0;
+                        foreach (CartItem cartItem in cartItems)
+                        {
+                            if (cartItem.OrderID.Equals(cancelOrder.OrderID))
+                            {
+                                totalPrice += cartItem.OrderPrice;
+                                cancelCart.Add(cartItem);
+                            }
+                        }
+                        //Show all Cart Items
+                        Grid<CartItem>.ShowTable(cancelCart);
+                        //Get Cart Item to Modify
+                        System.Console.WriteLine("Enter Item ID to Modify : ");
+                        string itemID = Console.ReadLine().ToUpper();
+                        //To check Cart ID is Valid
+                        bool cartNotExists = true;
+                        CartItem modifyItem = Search<CartItem>.BinarySearch(values: cartItems, prop: "ItemID", searchElement: itemID, out cartNotExists);
+                        if (cartNotExists)
+                        {
+                            //Invalid Cart Item
+                            System.Console.WriteLine("Cart Item Invalid...");
+                        }
+                        else
+                        {
+                            //Get new Quantity
+                            System.Console.WriteLine("Enter New Quantity to Modify : ");
+                            int newQuantity = int.Parse(Console.ReadLine());
+                            //Calculate New Price
+                            //If Extra Quantity Ordered
+                            //Check weather need to Add or Minus Total Price
+                            if (newQuantity > modifyItem.OrderQuantity)
+                            {
+                                //Remove Modify Cart Price from Total Price
+                                totalPrice -= modifyItem.OrderPrice;
+                                //To get Food Price
+                                double foodPrice = modifyItem.OrderPrice / modifyItem.OrderQuantity;
+                                //New Quantity Price
+                                double newPrice = newQuantity * foodPrice;
+                                //New Total Price
+                                totalPrice += newPrice;
+                                //Check New Quantity Price is Available in Customer Wallet
+                                //If Wallet Amount is Not Enough
+                                if (newPrice > currentLoggedCustomer.WalletBalance)
+                                {
+                                    //Insufficient Balance
+                                    System.Console.WriteLine("Insufficient Balance");
+                                    //Recharge Wallet
+                                    System.Console.WriteLine("Are you willing to recharge (yes/no): ");
+                                    string recharge = Console.ReadLine().ToLower();
+                                    if (recharge == "yes")
+                                    {
+                                        System.Console.WriteLine($"New Order Quantity Amount : {newPrice}\nMinimum Recharge Amount : {newPrice - currentLoggedCustomer.WalletBalance}");
+                                        System.Console.WriteLine("Enter Recharge Amount : ");
+                                        currentLoggedCustomer.WalletRecharge(double.Parse(Console.ReadLine()));
+                                        bool balance = newPrice <= currentLoggedCustomer.WalletBalance ? true : false;
+                                        if (balance)
+                                        {
+                                            //Change Cart Details Food Quantiy
+                                            FoodDetails food = Search<FoodDetails>.BinarySearch(values: foods, prop: "FoodID", searchElement: modifyItem.FoodID, out balance);
+                                            //Change Food Quantity
+                                            food.AvailableQuantity -= (newQuantity - modifyItem.OrderQuantity);
+                                            modifyItem.OrderPrice = newPrice;
+                                            modifyItem.OrderQuantity = newQuantity;
+                                            //Deduct Wallet Amount
+                                            currentLoggedCustomer.DeductAmount(newPrice);
+                                            System.Console.WriteLine("Order Modified Succesfully...");
+                                        }
+                                        else
+                                        {
+                                            //Recharge Amount is Lower than New Cart Price
+                                            System.Console.WriteLine("Order Modified Cancelled Insufficient Balance");
+                                        }
+                                    }
+                                    //Customer doesn't Wish to Recharge Modify Order Cancelled
+                                    else
+                                    {
+                                        System.Console.WriteLine("Order Modified Cancelled Insufficient Balance");
+                                    }
+                                }
+                                else
+                                //Wallet has Balance 
+                                {
+                                    //Change Cart Details Food Quantiy
+                                    FoodDetails food = Search<FoodDetails>.BinarySearch(values: foods, prop: "FoodID", searchElement: modifyItem.FoodID, out cartNotExists);
+                                    //Change Food Quantity
+                                    food.AvailableQuantity -= (newQuantity - modifyItem.OrderQuantity);
+                                    modifyItem.OrderPrice = newPrice;
+                                    modifyItem.OrderQuantity = newQuantity;
+                                    //Deduct Wallet Amount
+                                    currentLoggedCustomer.DeductAmount(newPrice);
+                                    System.Console.WriteLine("Order Modified Succesfully...");
+                                }
+                            }
+                            else if (newQuantity == modifyItem.OrderQuantity)
+                            //Same Quantity as New Quantity
+                            {
+                                System.Console.WriteLine("Same Quantity Number in Cart");
+                            }
+                            else
+                            //New Quantity is minimum than Cart Quantity
+                            //Add the Remaining Amount to User Wallet
+                            {
+                                //Remove Modify Cart Price from Total Price
+                                totalPrice -= modifyItem.OrderPrice;
+                                //To get Food Price
+                                double foodPrice = modifyItem.OrderPrice / modifyItem.OrderQuantity;
+                                //New Quantity Price
+                                double newPrice = newQuantity * foodPrice;
+                                //To get Balance Price
+                                double balance = modifyItem.OrderPrice - newPrice;
+                                //New Total Price
+                                totalPrice += newPrice;
+                                //Add Balance to Customer wallet
+                                currentLoggedCustomer.WalletRecharge(balance);
+                                //Change Cart Food Details
+                                FoodDetails food = Search<FoodDetails>.BinarySearch(values: foods, prop: "FoodID", searchElement: modifyItem.FoodID, out cartNotExists);
+                                //Change Food Quantity
+                                food.AvailableQuantity += (modifyItem.OrderQuantity - newQuantity);
+                                modifyItem.OrderPrice = newPrice;
+                                modifyItem.OrderQuantity = newQuantity;
+                                System.Console.WriteLine("Order Modified Successfully...");
+                            }
+                        }
+                    }
+                }
 
             }
             catch (Exception e)
@@ -375,7 +534,7 @@ namespace OnlineCafe
                 bool isOrder = false;
                 CustomList<OrderDetails> orderedOrder = [];
                 foreach (OrderDetails orderDetails in orders)
-                {   
+                {
                     System.Console.WriteLine(orderDetails.OrderStatus);
                     if (currentLoggedCustomer.UserID.Equals(orderDetails.UserID) && orderDetails.OrderStatus.Equals(OrderStatus.Ordered))
                     {
@@ -430,6 +589,28 @@ namespace OnlineCafe
 
             }
             catch (Exception e)
+            {
+                System.Console.WriteLine(e.Message);
+                System.Console.WriteLine("Try Again");
+            }
+        }
+        
+        public static void OrderHistory()
+        {
+            try
+            {
+                CustomList<OrderDetails> historyOrders=new CustomList<OrderDetails>();
+                foreach(OrderDetails order in orders)
+                {
+                    if(order.UserID.Equals(currentLoggedCustomer.UserID))
+                    {
+                        historyOrders.Add(order);
+                    }
+                }
+                //Show Order History
+                Grid<OrderDetails>.ShowTable(historyOrders);
+            }
+            catch(Exception e)
             {
                 System.Console.WriteLine(e.Message);
                 System.Console.WriteLine("Try Again");
