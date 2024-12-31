@@ -3,18 +3,18 @@ using System.Collections;
 namespace OnlineCafe
 {
     //For Using For Each
-    public partial class CustomList<Type>:IEnumerable,IEnumerator
+    public partial class CustomList<Type> : IEnumerable, IEnumerator
     {
         int position;
         public IEnumerator GetEnumerator()
         {
-            position=-1;
+            position = -1;
             return (IEnumerator)this;
         }
 
         public bool MoveNext()
         {
-            if(position<_count-1)
+            if (position < _count - 1)
             {
                 position++;
                 return true;
@@ -24,8 +24,8 @@ namespace OnlineCafe
         }
         public void Reset()
         {
-            position=-1;
+            position = -1;
         }
-        public object Current{get {return _array[position];}}
+        public object Current { get { return _array[position]; } }
     }
 }
